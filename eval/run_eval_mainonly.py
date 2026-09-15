@@ -21,8 +21,11 @@ Usage:
 import argparse
 import asyncio
 import json
+import os
 from datetime import datetime
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 from orchestrator import EventLog, Planner
 
@@ -58,11 +61,21 @@ class MainOnlyPlanner(Planner):
 
 
 async def main():
+    load_dotenv()
     parser = argparse.ArgumentParser(description="委譲なし(main単独)比較実験ランナー")
     parser.add_argument("--out-dir", default=str(REPO_ROOT / "eval/results"))
     parser.add_argument("--label", default="main-only", help="実験ディレクトリ名に付けるラベル")
     parser.add_argument("--max-iterations", type=int, default=10)
-    parser.add_argument("--main-vllm-base-url", default="http://localhost:8000")
+    parser.add_argument(
+        "--main-vllm-base-url",
+        default=os.environ.get("MAIN_VLLM_BASE_URL")
+        or f"http://localhost:{os.environ.get('MAIN_VLLM_PORT', 8000)}",
+    )
+    parser.add_argument(
+        "--main-model-name",
+        default=os.environ.get("MAIN_MODEL_NAME", "default"),
+        help="メインLLMの`model`フィールドに使う名前(vllm serveの--served-model-nameと一致させる)",
+    )
     parser.add_argument("--limit", type=int, default=None, help="実行するタスク数の上限(デバッグ用)")
     parser.add_argument("--task-ids", nargs="*", default=None, help="実行するtask idを限定")
     args = parser.parse_args()
@@ -91,6 +104,7 @@ async def main():
             main_llm_base_url=args.main_vllm_base_url,
             event_log=event_log,
             worker_client=no_worker_client,
+            model_name=args.main_model_name,
         ) as planner:
             result = await run_one_task(planner, task, args.max_iterations)
         result["event_log_file"] = str(Path(event_log.log_file).relative_to(REPO_ROOT))

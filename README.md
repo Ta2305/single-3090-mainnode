@@ -120,7 +120,25 @@ pip install -r requirements.txt
 pip install -r eval/requirements-eval.txt
 ```
 
-### 2. メインLLM(vLLM)を起動する
+### 2. 環境変数を設定する
+
+```bash
+cp .env.example .env
+```
+
+`.env`(`.gitignore`対象、リポジトリには含まれません)に、メインLLMサーバーの接続先・
+モデル名・ログ出力先を設定します。すべて省略可能で、省略時は`http://localhost:8000`・
+`"default"`・`./logs`にフォールバックします。各値は`--main-vllm-base-url`等の
+CLI引数でも上書きできます(CLI引数 > `.env` > 既定値の優先順)。
+
+| 環境変数 | 意味 | 既定値 |
+|---|---|---|
+| `MAIN_VLLM_BASE_URL` | メインLLMサーバーのbase_url | `http://localhost:$MAIN_VLLM_PORT` |
+| `MAIN_VLLM_PORT` | ホストがlocalhost固定でよい場合のポート番号 | `8000` |
+| `MAIN_MODEL_NAME` | メインLLMの`model`フィールド(後述の`--served-model-name`と一致させる) | `default` |
+| `LOG_DIR` | イベントログ・実行ログの出力先 | `./logs` |
+
+### 3. メインLLM(vLLM)を起動する
 
 以下は`cyankiwi/Qwen3.6-27B-AWQ-INT4`(24GB VRAM級)を例にした起動コマンドです。
 他のモデルを使う場合も、量子化方式・VRAM容量に応じて`--gpu-memory-utilization`と
@@ -129,21 +147,20 @@ pip install -r eval/requirements-eval.txt
 ```bash
 vllm serve <モデルのHFリポジトリID> \
   --port 8000 \
-  --served-model-name <任意の短い名前> \
+  --served-model-name <.envのMAIN_MODEL_NAMEと同じ値> \
   --gpu-memory-utilization 0.95 \
   --max-model-len 8192 \
   --enable-auto-tool-choice \
   --tool-call-parser hermes
 ```
 
-`--served-model-name`は`orchestrator/planner.py`の`Planner`が送る`model`フィールド
-(既定値`"Qwen3.6-27B"`)と一致させてください。一致していないとサーバー側で
-`404 The model ... does not exist.`になります(`/v1/models`のヘルスチェックだけでは
-気づけないため注意)。VRAM不足でロードに失敗する場合は、`--max-model-len`をさらに
-下げる、`--gpu-memory-utilization`を上げる、`--enforce-eager`を付ける、といった
-調整を試してください。
+`--served-model-name`は`.env`の`MAIN_MODEL_NAME`(既定値`"default"`)と一致させて
+ください。一致していないとサーバー側で`404 The model ... does not exist.`になります
+(`/v1/models`のヘルスチェックだけでは気づけないため注意)。VRAM不足でロードに失敗する
+場合は、`--max-model-len`をさらに下げる、`--gpu-memory-utilization`を上げる、
+`--enforce-eager`を付ける、といった調整を試してください。
 
-### 3. ワーカーLLM(llama.cpp)を起動する
+### 4. ワーカーLLM(llama.cpp)を起動する
 
 ```bash
 ./llama-server \
@@ -162,7 +179,7 @@ llama-serverがそれを「都度ネットワーク解決すべきモデル」�
 `--alias`は`configs/workers.yaml`の`model`フィールドと一致させてください
 (一致しないと`/v1/chat/completions`が`model ... not found`を返すことがあります)。
 
-### 4. ワーカー接続設定を編集する
+### 5. ワーカー接続設定を編集する
 
 `configs/workers.yaml`をコピーして`configs/workers.local.yaml`を作成し(このファイルは
 `.gitignore`対象です)、`hostname`/`ssh_jumphost`/`ssh_username`を実際の値に書き換えて
@@ -172,7 +189,7 @@ llama-serverがそれを「都度ネットワーク解決すべきモデル」�
 事前に、このマシンから踏み台経由でワーカーへの2段SSHログインができることを
 `ssh -J <踏み台> <ワーカーのhostname> echo ok`で確認しておくと安全です。
 
-### 5. 実行する
+### 6. 実行する
 
 ```bash
 python main.py "Write a function that adds two numbers" \

@@ -7,6 +7,9 @@ __pycache__/
 # (configs/workers.yaml は入力例のみのテンプレートとして追跡する)
 configs/workers.local.yaml
 
+# 環境変数の実値(.env.example はテンプレートとして追跡する)
+.env
+
 # 実行時ログ・実験結果(再現可能な生成物。コードではないため追跡しない)
 logs/
 eval/results/

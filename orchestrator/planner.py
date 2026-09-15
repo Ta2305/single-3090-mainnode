@@ -138,7 +138,8 @@ class Planner:
 
     Usage:
         async with WorkerClient('configs/workers.yaml') as worker_client, \\
-                   Planner('http://localhost:8000', event_log, worker_client) as planner:
+                   Planner('http://localhost:8000', event_log, worker_client,
+                           model_name='<served-model-name>') as planner:
             result = await planner.execute("Write a function to add two numbers")
     """
 
@@ -147,7 +148,7 @@ class Planner:
         main_llm_base_url: str,
         event_log: EventLog,
         worker_client: WorkerClient,
-        model_name: str = "Qwen3.6-27B"
+        model_name: str = "default"
     ):
         """
         Args:
@@ -155,7 +156,9 @@ class Planner:
                                 事前に `vllm serve` 等で起動しておく必要がある。
             event_log: EventLog インスタンス
             worker_client: WorkerClient インスタンス（既に `async with` で初期化済みのもの）
-            model_name: payloadの"model"フィールドに使う文字列
+            model_name: payloadの"model"フィールドに使う文字列。`vllm serve`起動時の
+                        `--served-model-name`と厳密に一致させる必要がある
+                        (呼び出し元でMAIN_MODEL_NAME環境変数/CLI引数から解決して渡すこと)。
         """
         self.main_llm_base_url = main_llm_base_url
         self.event_log = event_log

@@ -52,7 +52,15 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--main-vllm-base-url",
         default=None,
-        help="メインLLMサーバーのbase_url（既定: http://localhost:$MAIN_VLLM_PORT）"
+        help="メインLLMサーバーのbase_url（既定: $MAIN_VLLM_BASE_URL、"
+             "なければ http://localhost:$MAIN_VLLM_PORT）"
+    )
+    p.add_argument(
+        "--main-model-name",
+        default=None,
+        help="メインLLMの`model`フィールドに使う名前。`vllm serve`起動時の"
+             "--served-model-nameと一致させること（既定: $MAIN_MODEL_NAME、"
+             "なければ'default'）"
     )
     p.add_argument(
         "--worker-precheck-timeout",
@@ -142,9 +150,12 @@ async def run(args: argparse.Namespace) -> int:
                 return EXIT_WORKER_UNREACHABLE
 
         # 2. メインLLMサーバーへの疎通確認。
-        main_base_url = args.main_vllm_base_url or (
-            f"http://localhost:{os.environ.get('MAIN_VLLM_PORT', 8000)}"
+        main_base_url = (
+            args.main_vllm_base_url
+            or os.environ.get("MAIN_VLLM_BASE_URL")
+            or f"http://localhost:{os.environ.get('MAIN_VLLM_PORT', 8000)}"
         )
+        main_model_name = args.main_model_name or os.environ.get("MAIN_MODEL_NAME", "default")
         try:
             await precheck_main_llm(main_base_url)
             logger.info(f"Main LLM reachable at {main_base_url}.")
@@ -158,6 +169,7 @@ async def run(args: argparse.Namespace) -> int:
             main_llm_base_url=main_base_url,
             event_log=event_log,
             worker_client=worker_client,
+            model_name=main_model_name,
         ) as planner:
             try:
                 exec_result = await planner.execute(args.task, max_iterations=args.max_iterations)
