@@ -1,0 +1,9 @@
+# eval/run_eval.py・eval/visualize.py 専用の追加依存関係。
+# ルートのrequirements.txtには含めていない(オーケストレータ本体を動かすだけなら不要なため)。
+#
+# 使い方:
+#   source venv/bin/activate
+#   uv pip install -r eval/requirements-eval.txt
+
+matplotlib==3.10.9
+datasets==5.0.1

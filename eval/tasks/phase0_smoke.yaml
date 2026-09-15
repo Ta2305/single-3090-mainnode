@@ -1,0 +1,21 @@
+# Phase 0: 配線確認用の自明なタスク。
+#
+# 目的: メインLLM -> ワーカーへのdispatch -> 結果統合、という配線が
+# 通ることを確認する。タスクが自明すぎるため、メインLLMは分解せず
+# "main"で直接処理するか、単一のサブタスクをworker-1に投げるだけで完了するはず。
+#
+# 使い方: python -m eval.run_eval --task-ids phase0-add-two-numbers
+
+tasks:
+  - id: phase0-add-two-numbers
+    phase: 0
+    prompt: "Write a Python function `add(a, b)` that returns the sum of two numbers."
+    entry_point: add
+    test_code: |
+      def test_add():
+          assert add(2, 3) == 5
+          assert add(-1, 1) == 0
+          assert add(0, 0) == 0
+    timeout_s: 60
+    notes: >
+      配線確認用。自明なタスクなので分解なしで完了するはず。

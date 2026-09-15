@@ -1,0 +1,105 @@
+# Phase 1: HumanEval/MBPP由来の関数レベルタスク。
+#
+# ライセンス注記: HumanEval は MIT License、MBPP は CC-BY-4.0。
+# 以下のプロンプト/テストは出典に着想を得て独自に書き下ろしたものであり、
+# 元データセットの問題文をそのまま転載したものではない。
+#
+# 目的: メインLLMが「関数を実装する」「その関数のユニットテストを書く」のような
+# 2〜3個のサブタスクに分解し、それぞれをワーカーに投げ、メインLLMが統合して
+# テストを実際に実行し合否判定する、という一連の流れを確認する。
+# ユニットテストの合否という、無料で検証可能な正解信号を評価に使う。
+
+tasks:
+  - id: phase1-is-palindrome
+    phase: 1
+    source: "HumanEval-inspired"
+    prompt: >
+      Write a Python function `is_palindrome(s)` that returns True if the
+      given string reads the same forwards and backwards (case-sensitive,
+      no whitespace/punctuation stripping), else False.
+    entry_point: is_palindrome
+    test_code: |
+      def test_is_palindrome():
+          assert is_palindrome("racecar") is True
+          assert is_palindrome("hello") is False
+          assert is_palindrome("") is True
+    timeout_s: 120
+
+  - id: phase1-flatten-list
+    phase: 1
+    source: "MBPP-inspired"
+    prompt: >
+      Write a Python function `flatten_list(nested)` that takes an
+      arbitrarily nested list of integers and returns a single flat
+      list of integers, preserving order.
+    entry_point: flatten_list
+    test_code: |
+      def test_flatten_list():
+          assert flatten_list([1, [2, 3], [4, [5, 6]]]) == [1, 2, 3, 4, 5, 6]
+          assert flatten_list([]) == []
+          assert flatten_list([1, [], [2]]) == [1, 2]
+    timeout_s: 120
+
+  - id: phase1-fizzbuzz
+    phase: 1
+    source: "MBPP-inspired"
+    prompt: >
+      Write a Python function `fizzbuzz(n)` that returns a list of strings
+      for numbers 1 through n: "Fizz" if divisible by 3, "Buzz" if
+      divisible by 5, "FizzBuzz" if divisible by both, else the number
+      as a string.
+    entry_point: fizzbuzz
+    test_code: |
+      def test_fizzbuzz():
+          result = fizzbuzz(15)
+          assert result[0] == "1"
+          assert result[2] == "Fizz"
+          assert result[4] == "Buzz"
+          assert result[14] == "FizzBuzz"
+          assert len(result) == 15
+    timeout_s: 120
+
+  - id: phase1-count-vowels
+    phase: 1
+    source: "HumanEval-inspired"
+    prompt: >
+      Write a Python function `count_vowels(s)` that returns the number of
+      vowels (a, e, i, o, u, case-insensitive) in the given string.
+    entry_point: count_vowels
+    test_code: |
+      def test_count_vowels():
+          assert count_vowels("hello world") == 3
+          assert count_vowels("AEIOU") == 5
+          assert count_vowels("xyz") == 0
+    timeout_s: 120
+
+  - id: phase1-merge-sorted-lists
+    phase: 1
+    source: "HumanEval-inspired"
+    prompt: >
+      Write a Python function `merge_sorted(a, b)` that takes two sorted
+      lists of integers and returns a single sorted list containing all
+      elements from both, without using the built-in `sorted()` function.
+    entry_point: merge_sorted
+    test_code: |
+      def test_merge_sorted():
+          assert merge_sorted([1, 3, 5], [2, 4, 6]) == [1, 2, 3, 4, 5, 6]
+          assert merge_sorted([], [1, 2]) == [1, 2]
+          assert merge_sorted([1], []) == [1]
+    timeout_s: 120
+
+  - id: phase1-word-frequency
+    phase: 1
+    source: "MBPP-inspired"
+    prompt: >
+      Write a Python function `word_frequency(text)` that returns a dict
+      mapping each lowercase word (split on whitespace, punctuation
+      stripped) to its occurrence count in the given text.
+    entry_point: word_frequency
+    test_code: |
+      def test_word_frequency():
+          result = word_frequency("The cat sat on the mat. The cat ran.")
+          assert result["the"] == 3
+          assert result["cat"] == 2
+          assert result["mat"] == 1
+    timeout_s: 120

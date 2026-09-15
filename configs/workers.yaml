@@ -1,0 +1,22 @@
+# ワーカーノード設定
+#
+# 【要編集】hostname / ssh_jumphost / ssh_username はプレースホルダです。
+# 実際に稼働しているワーカーマシンの値に書き換えてください。
+#
+# 通信経路(README.md参照):
+#   この単一3090マシン --ssh -J ssh_jumphost--> (本物の2段SSHログイン) --> hostname(ワーカー自身)
+#   その上で `-L local_forward_port:127.0.0.1:inference_port` によりループバックへ転送する。
+#   ワーカー側のファイアウォール変更・常駐プロセスは一切不要。
+
+workers:
+  - id: worker-1
+    hostname: gpu-w01.local
+    inference_port: 8080
+    # llama-server(router mode)が/v1/modelsで返すidと厳密に一致させる必要がある
+    # （量子化タグを付けないと "model ... not found" で400になることがある。
+    #   例: unsloth/Qwen3.5-9B-GGUF:Q4_K_M）
+    model: unsloth/Qwen3.5-9B-GGUF
+    basepath: ~/llm-worker/llama.cpp/build
+    ssh_jumphost: proxy.example.com
+    ssh_username: your_username
+    local_forward_port: 9001

@@ -1,0 +1,22 @@
+# Python仮想環境(requirements.txtから再構築可能)
+venv/
+__pycache__/
+*.pyc
+
+# 実ホスト名/ユーザー名を書き込んだ、このマシン固有のワーカー接続情報
+# (configs/workers.yaml は入力例のみのテンプレートとして追跡する)
+configs/workers.local.yaml
+
+# 実行時ログ・実験結果(再現可能な生成物。コードではないため追跡しない)
+logs/
+eval/results/
+
+# 研究プロセスのメモ・進捗共有用ドキュメント(コードではなく、
+# 研究室内の作業記録のため公開リポジトリには含めない)
+research_notes/
+CLAUDE.md
+
+# HuggingFaceキャッシュ・ダウンロード済みモデル重み等が誤って紛れ込んだ場合の保険
+.cache/
+*.gguf
+*.safetensors

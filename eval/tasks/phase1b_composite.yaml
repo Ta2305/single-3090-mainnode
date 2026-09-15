@@ -1,0 +1,59 @@
+# Phase 1b: 発表用に追加した複合タスク。
+#
+# 目的: phase1_functions.yaml の単発関数タスクは1つの関数を書くだけで
+# 完結してしまい、メインLLMが分解せず即座に"complete"するケースが多い
+# （phase0と同じ「委譲が発生しない」パターンになりがち）。
+# ここでは「実装+テスト」や「依存関係のある複数関数」など、
+# 自然に複数サブタスクへ分解される可能性が高いタスクを用意し、
+# 実際にmain/workerへどう割り振られるかを観察する。
+#
+# 結果は実行してみるまで分からない（プランナーの判断はLLM次第）。
+# 意図した通りに分解されなければ、それ自体も発表で報告すべき観察結果。
+
+tasks:
+  - id: phase1b-lru-cache
+    phase: 1b
+    source: "custom (composite, presentation用)"
+    prompt: >
+      Implement a simple LRU (Least Recently Used) cache as a Python class
+      `LRUCache` with `__init__(self, capacity)`, `get(self, key)` (returns
+      the value or -1 if not found, and marks the key as recently used),
+      and `put(self, key, value)` (inserts/updates a key, evicting the
+      least recently used entry if the cache exceeds capacity). Also write
+      unit tests (plain assert statements) covering capacity eviction order
+      and the effect of `get` on recency.
+    entry_point: LRUCache
+    test_code: |
+      def test_lru_cache():
+          cache = LRUCache(2)
+          cache.put(1, 1)
+          cache.put(2, 2)
+          assert cache.get(1) == 1
+          cache.put(3, 3)  # evicts key 2 (least recently used)
+          assert cache.get(2) == -1
+          cache.put(4, 4)  # evicts key 1
+          assert cache.get(1) == -1
+          assert cache.get(3) == 3
+          assert cache.get(4) == 4
+    timeout_s: 120
+
+  - id: phase1b-prime-chain
+    phase: 1b
+    source: "custom (composite, presentation用)"
+    prompt: >
+      Write a Python function `is_prime(n)` that returns True if `n` is a
+      prime number (n < 2 is not prime), else False. Then write a second
+      function `nth_prime(n)` that returns the n-th prime number (1-indexed,
+      so nth_prime(1) == 2), reusing `is_prime`. Also write unit tests
+      (plain assert statements) for both functions.
+    entry_point: nth_prime
+    test_code: |
+      def test_prime_chain():
+          assert is_prime(2) is True
+          assert is_prime(1) is False
+          assert is_prime(17) is True
+          assert is_prime(18) is False
+          assert nth_prime(1) == 2
+          assert nth_prime(2) == 3
+          assert nth_prime(6) == 13
+    timeout_s: 120
